@@ -19,6 +19,7 @@ public class BallCanvas extends JPanel {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
 
+
         List<Rectangle2D.Double> doubles = List.of(new Rectangle2D.Double(0, 0, 20, 20),
                 new Rectangle2D.Double(0, this.getHeight() - 20, 20, 20),
                 new Rectangle2D.Double(this.getWidth() - 20, 0, 20, 20),
@@ -26,11 +27,17 @@ public class BallCanvas extends JPanel {
         g2.setColor(Color.BLACK);
         doubles.forEach(g2::fill);
 
+        int scoredCount = 0;
         for(int i = 0; i < balls.size(); i++){
             Ball b = balls.get(i);
             if (!b.scored) {
                 b.draw(g2);
+            } else {
+                scoredCount++;
             }
         }
+        g2.setFont(new Font("Verdana", Font.BOLD,20));
+        g2.setColor(Color.BLUE);
+        g2.drawString("Number of scored balls: " + scoredCount, this.getWidth() / 2 - 150, this.getHeight() - 10);
     }
 }

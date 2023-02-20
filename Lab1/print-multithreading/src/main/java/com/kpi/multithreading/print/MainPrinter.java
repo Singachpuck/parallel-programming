@@ -3,7 +3,9 @@ package com.kpi.multithreading.print;
 public class MainPrinter {
 
     public static void main(String[] args) throws InterruptedException {
+        System.out.println("Print ordered:");
         printOrdered();
+        System.out.println("Print unordered");
         printUnordered();
     }
 
