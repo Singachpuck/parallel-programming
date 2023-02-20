@@ -56,7 +56,7 @@ public class BallFactory {
                 priority = Thread.MIN_PRIORITY;
             }
         } else if (colorMode == ColorMode.GREY) {
-            color = Color.lightGray;
+            color = Color.darkGray;
         } else if (colorMode == ColorMode.RANDOM) {
             color = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
         }
