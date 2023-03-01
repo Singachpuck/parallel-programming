@@ -36,25 +36,26 @@ public class FoxMultiplyMatrix implements MultiplyMatrix {
 
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_N);
 
-        for (int i = 0; i < blockAmount; i++) {
-            for (int j = 0; j < blockAmount; j++) {
-                final int taskI = i;
-                final int taskJ = j;
-
-                final Runnable countItem = () -> {
-                    for (int stage = 0; stage < blockAmount; stage++) {
-                        int k_bar = (taskI + stage) % blockAmount;
-                        result.addBlock(syncMultiplyMatrix.multiplyBlock(blocks1[taskI][k_bar], blocks2[k_bar][taskJ]), taskI, taskJ);
-                    }
-                };
-
-                final Future<?> task = executorService.submit(countItem);
-
-                tasks.add(task);
-            }
-        }
-
         try {
+            for (int i = 0; i < blockAmount; i++) {
+                for (int j = 0; j < blockAmount; j++) {
+                    final int taskI = i;
+                    final int taskJ = j;
+
+                    final Runnable countItem = () -> {
+                        for (int stage = 0; stage < blockAmount; stage++) {
+                            int k_bar = (taskI + stage) % blockAmount;
+                            result.addBlock(syncMultiplyMatrix.multiplyBlock(blocks1[taskI][k_bar], blocks2[k_bar][taskJ]), taskI, taskJ);
+                        }
+                    };
+
+                    final Future<?> task = executorService.submit(countItem);
+
+                    tasks.add(task);
+                }
+            }
+
+
             for (Future<?> task : tasks) {
                 task.get();
             }
@@ -62,9 +63,10 @@ public class FoxMultiplyMatrix implements MultiplyMatrix {
             throw new RuntimeException("Unexpected interruption!");
         } catch (ExecutionException e) {
             throw new RuntimeException("Computation error!");
+        } finally {
+            executorService.shutdown();
         }
 
-        executorService.shutdown();
 
         return result;
     }

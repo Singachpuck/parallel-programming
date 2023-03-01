@@ -36,25 +36,26 @@ public class StringMultiplyMatrix implements MultiplyMatrix {
 
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_N);
 
-        for (int i = 0, items = resultWidth * resultHeight; i < items; i++) {
-            final int index = i;
-
-            final Runnable countItem = () -> {
-                final int resultI = index / resultWidth;
-                final int resultJ = index % resultWidth;
-                double value = 0;
-                for (int k = 0; k < m1.getWidth(); k++) {
-                    value += table1[resultI][k] * table2[k][resultJ];
-                }
-                resultTable[resultI][resultJ] = value;
-            };
-
-            final Future<?> task = executorService.submit(countItem);
-
-            tasks.add(task);
-        }
-
         try {
+            for (int i = 0, items = resultWidth * resultHeight; i < items; i++) {
+                final int index = i;
+
+                final Runnable countItem = () -> {
+                    final int resultI = index / resultWidth;
+                    final int resultJ = index % resultWidth;
+                    double value = 0;
+                    for (int k = 0; k < m1.getWidth(); k++) {
+                        value += table1[resultI][k] * table2[k][resultJ];
+                    }
+                    resultTable[resultI][resultJ] = value;
+                };
+
+                final Future<?> task = executorService.submit(countItem);
+
+                tasks.add(task);
+            }
+
+
             for (Future<?> task : tasks) {
                 task.get();
             }
@@ -62,9 +63,9 @@ public class StringMultiplyMatrix implements MultiplyMatrix {
             throw new RuntimeException("Unexpected interruption!");
         } catch (ExecutionException e) {
             throw new RuntimeException("Computation error!");
+        } finally {
+            executorService.shutdown();
         }
-
-        executorService.shutdown();
 
         return result;
     }
