@@ -1,5 +1,6 @@
 package com.kpi.multithreading.matrix.model;
 
+import com.kpi.multithreading.matrix.service.SyncMultiplyMatrix;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

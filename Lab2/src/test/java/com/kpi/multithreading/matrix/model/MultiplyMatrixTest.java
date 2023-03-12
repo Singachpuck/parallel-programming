@@ -1,5 +1,8 @@
 package com.kpi.multithreading.matrix.model;
 
+import com.kpi.multithreading.matrix.service.FoxMultiplyMatrix;
+import com.kpi.multithreading.matrix.service.StringMultiplyMatrix;
+import com.kpi.multithreading.matrix.service.SyncMultiplyMatrix;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

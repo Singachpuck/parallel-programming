@@ -1,4 +1,7 @@
-package com.kpi.multithreading.matrix.model;
+package com.kpi.multithreading.matrix.service;
+
+import com.kpi.multithreading.matrix.model.Block;
+import com.kpi.multithreading.matrix.model.Matrix;
 
 public class SyncMultiplyMatrix implements MultiplyMatrix {
 

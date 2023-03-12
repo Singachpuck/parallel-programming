@@ -1,4 +1,6 @@
-package com.kpi.multithreading.matrix.model;
+package com.kpi.multithreading.matrix.service;
+
+import com.kpi.multithreading.matrix.model.Matrix;
 
 import java.util.ArrayList;
 import java.util.List;
