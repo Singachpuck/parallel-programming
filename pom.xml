@@ -14,6 +14,7 @@
         <module>Lab2</module>
         <module>Lab3</module>
         <module>Lab4</module>
+        <module>Lab5</module>
     </modules>
 
     <properties>
@@ -21,10 +22,16 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.9.1</junit.version>
+        <apache-collections.version>4.4</apache-collections.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${apache-collections.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
