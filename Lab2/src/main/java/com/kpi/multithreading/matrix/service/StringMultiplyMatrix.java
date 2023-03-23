@@ -39,20 +39,22 @@ public class StringMultiplyMatrix implements MultiplyMatrix {
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_N);
 
         try {
-            for (int i = 0, items = resultWidth * resultHeight; i < items; i++) {
-                final int index = i;
+            for (int i = 0; i < resultHeight; i++) {
+                final int resultI = i;
 
-                final Runnable countItem = () -> {
-                    final int resultI = index / resultWidth;
-                    final int resultJ = index % resultWidth;
-                    double value = 0;
-                    for (int k = 0; k < m1.getWidth(); k++) {
-                        value += table1[resultI][k] * table2[k][resultJ];
+                // Process that counts line
+                final Runnable countLine = () -> {
+                    // Inside process, we count iteratively each cell
+                    for (int resultJ = 0; resultJ < resultWidth; resultJ++) {
+                        double value = 0;
+                        for (int k = 0; k < m1.getWidth(); k++) {
+                            value += table1[resultI][k] * table2[k][resultJ];
+                        }
+                        resultTable[resultI][resultJ] = value;
                     }
-                    resultTable[resultI][resultJ] = value;
                 };
 
-                final Future<?> task = executorService.submit(countItem);
+                final Future<?> task = executorService.submit(countLine);
 
                 tasks.add(task);
             }
