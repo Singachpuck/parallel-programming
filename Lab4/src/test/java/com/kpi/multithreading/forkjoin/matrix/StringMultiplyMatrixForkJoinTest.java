@@ -41,10 +41,7 @@ class StringMultiplyMatrixForkJoinTest {
 
     static Stream<Arguments> stringMultiplyMatrixSupply() {
         return Stream.of(
-                Arguments.of(new StringMultiplyMatrixForkJoin(2)),
-                Arguments.of(new StringMultiplyMatrixForkJoin(4)),
-                Arguments.of(new StringMultiplyMatrixForkJoin(6)),
-                Arguments.of(new StringMultiplyMatrixForkJoin(8))
+                Arguments.of(new ForkJoinMultiplyMatrix())
         );
     }
 
@@ -58,19 +55,19 @@ class StringMultiplyMatrixForkJoinTest {
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
     @Order(4)
-    void stringMultiplyTestSmall(StringMultiplyMatrixForkJoin stringMultiplyMatrix) {
+    void forkJoinMultiplyMatrixTestSmall(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
         long before = System.nanoTime();
         Matrix multiplyM = stringMultiplyMatrix.multiply(m1, m2);
         long after = System.nanoTime();
 
         assertMatrix(multiplyM);
-        System.out.println("Threads: " + stringMultiplyMatrix.getThreadNumber() + ". Execution time stringMultiplyTestSmall: " + (after - before) / 1_000_000_000D);
+        System.out.println("Execution time forkJoinMultiplyMatrixTestSmall: " + (after - before) / 1_000_000_000D);
     }
 
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
     @Order(5)
-    void stringMultiplyTestMedium(StringMultiplyMatrixForkJoin stringMultiplyMatrix) {
+    void forkJoinMultiplyMatrixTestMedium(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(100, 100);
         final Matrix m2 = MatrixFactory.getRandomMatrix(100, 100);
 
@@ -78,13 +75,13 @@ class StringMultiplyMatrixForkJoinTest {
         stringMultiplyMatrix.multiply(m1, m2);
         long after = System.nanoTime();
 
-        System.out.println("Threads: " + stringMultiplyMatrix.getThreadNumber() + ". Execution time stringMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+        System.out.println("Execution time forkJoinMultiplyMatrixTestMedium: " + (after - before) / 1_000_000_000D);
     }
 
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
     @Order(6)
-    void stringMultiplyTestBig(StringMultiplyMatrixForkJoin stringMultiplyMatrix) {
+    void forkJoinMultiplyMatrixTestBig(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(1000, 1000);
         final Matrix m2 = MatrixFactory.getRandomMatrix(1000, 1000);
 
@@ -92,18 +89,23 @@ class StringMultiplyMatrixForkJoinTest {
         stringMultiplyMatrix.multiply(m1, m2);
         long after = System.nanoTime();
 
-        System.out.println("Threads: " + stringMultiplyMatrix.getThreadNumber() + ". Execution time stringMultiplyTestBig: " + (after - before) / 1_000_000_000D);
+        System.out.println("Execution time forkJoinMultiplyMatrixTestBig: " + (after - before) / 1_000_000_000D);
     }
 
     void assertMatrix(Matrix m) {
-        if (m.getWidth() != resultM.getWidth() || m.getHeight() != resultM.getHeight()) {
+        assertMatrix(m, resultM);
+    }
+
+    void assertMatrix(Matrix m1, Matrix m2) {
+        if (m1.getWidth() != m2.getWidth() || m1.getHeight() != m2.getHeight()) {
             Assertions.fail();
         }
 
-        final double[][] assertTable = m.getTable();
-        for (int i = 0; i < m.getHeight(); i++) {
-            for (int j = 0; j < m.getWidth(); j++) {
-                Assertions.assertEquals(assertTable[i][j], result[i][j]);
+        final double[][] assertTable = m1.getTable();
+        final double[][] verifyTable = m2.getTable();
+        for (int i = 0; i < m1.getHeight(); i++) {
+            for (int j = 0; j < m1.getWidth(); j++) {
+                Assertions.assertTrue(Math.abs(assertTable[i][j] - verifyTable[i][j]) < 1e-5);
             }
         }
     }

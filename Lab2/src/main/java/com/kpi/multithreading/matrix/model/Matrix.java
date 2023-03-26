@@ -46,7 +46,12 @@ public class Matrix {
         return blocks;
     }
 
-//    public Matrix
+    public Block toBlock() {
+        return new Block(
+                this,0, 0,
+                height, width
+        );
+    }
 
     public double[][] getTable() {
         return table;
