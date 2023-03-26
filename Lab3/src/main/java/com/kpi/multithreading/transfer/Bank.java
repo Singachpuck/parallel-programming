@@ -59,31 +59,31 @@ public class Bank {
 //    }
 
     /** Solution 3 */
-    public void transfer(int from, int to, int amount) {
-        try {
-            lock.lock();
-            accounts[from] -= amount;
-            accounts[to] += amount;
-            if (ntransacts.incrementAndGet() % NTEST == 0) {
-                test();
-                Thread.currentThread().interrupt();
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /** Solution 4 */
 //    public void transfer(int from, int to, int amount) {
-//        synchronized (accounts) {
+//        try {
+//            lock.lock();
 //            accounts[from] -= amount;
 //            accounts[to] += amount;
 //            if (ntransacts.incrementAndGet() % NTEST == 0) {
 //                test();
 //                Thread.currentThread().interrupt();
 //            }
+//        } finally {
+//            lock.unlock();
 //        }
 //    }
+
+    /** Solution 4 */
+    public void transfer(int from, int to, int amount) {
+        synchronized (accounts) {
+            accounts[from] -= amount;
+            accounts[to] += amount;
+            if (ntransacts.incrementAndGet() % NTEST == 0) {
+                test();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     public void test() {
         int sum = 0;

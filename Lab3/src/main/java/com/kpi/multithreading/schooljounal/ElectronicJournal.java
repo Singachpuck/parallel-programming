@@ -1,32 +1,31 @@
 package com.kpi.multithreading.schooljounal;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 public class ElectronicJournal {
 
-    private final  Map<Student, List<Integer>> grades = new HashMap<>();
+    private final  Map<Student, List<Integer>> grades;
 
     private final Lock lock = new ReentrantLock();
 
-    public void addGradeForStudent(Student s, Integer grade) {
-        try {
-            lock.lock();
-            List<Integer> studentGrades = grades.get(s);
+    public ElectronicJournal(Set<Student> students) {
+        this.grades = students
+                .stream()
+                .collect(Collectors.toMap(student -> student, student -> new ArrayList<>()));
+    }
 
-            if (studentGrades == null) {
-                final List<Integer> g = new ArrayList<>();
-                g.add(grade);
-                grades.put(s, g);
-            } else {
+    public void addGradeForStudent(Student s, Integer grade) {
+        final List<Integer> studentGrades = grades.get(s);
+
+        if (studentGrades == null) {
+            throw new IllegalArgumentException("Unknown Student: " + s.getName());
+        } else {
+            synchronized (studentGrades) {
                 studentGrades.add(grade);
             }
-        } finally {
-            lock.unlock();
         }
     }
 

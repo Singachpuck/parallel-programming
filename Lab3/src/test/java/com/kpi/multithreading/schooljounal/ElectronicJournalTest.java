@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -36,7 +37,7 @@ class ElectronicJournalTest {
     void addGradeForStudentParallel() throws InterruptedException {
         final int people = 4;
         final List<Thread> threads = new ArrayList<>();
-        final ElectronicJournal journal = new ElectronicJournal();
+        final ElectronicJournal journal = new ElectronicJournal(new HashSet<>(students));
 
         for (int i = 0; i < people; i++) {
             final Thread t = new Thread(() -> {
