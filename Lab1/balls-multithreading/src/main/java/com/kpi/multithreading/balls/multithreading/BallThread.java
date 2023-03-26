@@ -14,6 +14,9 @@ public class BallThread extends Thread {
         try{
             for(;;){
                 b.move();
+                if (b.scored) {
+                    throw new InterruptedException();
+                }
                 System.out.println("Thread name = "
                         + Thread.currentThread().getName());
                 Thread.sleep(5);

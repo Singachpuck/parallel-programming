@@ -52,7 +52,7 @@ public class BounceFrame extends JFrame {
             if (gm == GameMode.DEFAULT) {
                 thread = new BallThread(b);
             } else if (gm == GameMode.WAITING) {
-                thread = new WaitingBallThread(b, usedThreads.isEmpty() ? null : usedThreads.get(0));
+                thread = new WaitingBallThread(b, usedThreads.isEmpty() ? null : usedThreads.get(usedThreads.size() - 1));
             }
             usedThreads.add(thread);
             thread.start();
@@ -65,7 +65,11 @@ public class BounceFrame extends JFrame {
             }
         });
         buttonStop.addActionListener(e -> {
-            usedThreads.forEach(Thread::interrupt);
+            usedThreads.forEach(thread -> {
+                if (!thread.isInterrupted()) {
+                    thread.interrupt();
+                }
+            });
             System.exit(0);
         });
 
@@ -77,7 +81,11 @@ public class BounceFrame extends JFrame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                usedThreads.forEach(Thread::interrupt);
+                usedThreads.forEach(thread -> {
+                    if (!thread.isInterrupted()) {
+                        thread.interrupt();
+                    }
+                });
             }
         });
     }
