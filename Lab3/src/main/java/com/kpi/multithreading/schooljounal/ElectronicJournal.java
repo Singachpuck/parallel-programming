@@ -9,8 +9,6 @@ public class ElectronicJournal {
 
     private final  Map<Student, List<Integer>> grades;
 
-    private final Lock lock = new ReentrantLock();
-
     public ElectronicJournal(Set<Student> students) {
         this.grades = students
                 .stream()
