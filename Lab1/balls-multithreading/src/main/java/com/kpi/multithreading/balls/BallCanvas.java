@@ -30,11 +30,14 @@ public class BallCanvas extends JPanel {
         int scoredCount = 0;
         for(int i = 0; i < balls.size(); i++){
             Ball b = balls.get(i);
-            if (!b.scored) {
+            if (!b.scored && i != 0) {
                 b.draw(g2);
             } else {
                 scoredCount++;
             }
+        }
+        if (balls.size() >= 1 && !balls.get(0).scored) {
+            balls.get(0).draw(g2);
         }
         g2.setFont(new Font("Verdana", Font.BOLD,20));
         g2.setColor(Color.BLUE);

@@ -49,11 +49,11 @@ public class BallFactory {
         if (colorMode == ColorMode.RED_BLUE) {
             if (red) {
                 color = Color.RED;
-                priority = Thread.MAX_PRIORITY;
+                priority = Thread.MIN_PRIORITY;
                 red = false;
             } else {
                 color = Color.BLUE;
-                priority = Thread.MIN_PRIORITY;
+                priority = Thread.MAX_PRIORITY;
             }
         } else if (colorMode == ColorMode.GREY) {
             color = Color.darkGray;
