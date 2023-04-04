@@ -34,7 +34,7 @@
                     <archive>
                         <manifest>
 <!--                            <addClasspath>true</addClasspath>-->
-                            <mainClass>com.kpi.multithreading.mpi.Main</mainClass>
+                            <mainClass>com.kpi.multithreading.mpi.StringMatrixMultiplicationMpi</mainClass>
                         </manifest>
                     </archive>
                     <finalName>${jar.finalName}</finalName>

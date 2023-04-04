@@ -25,4 +25,8 @@ rem Run mpi application
 echo:
 echo Running mpi application
 echo:
-call %MPJ_HOME%/bin/mpjrun.bat -np 4 -jar target/%PROJECT_NAME%.jar
+if not defined ROWS1 (set ROWS1=1000)
+if not defined COLS1 (set COLS1=1000)
+if not defined ROWS2 (set ROWS2=1000)
+if not defined COLS2 (set COLS2=1000)
+call %MPJ_HOME%/bin/mpjrun.bat -np 7 -jar target/%PROJECT_NAME%.jar -m1 "%ROWS1%,%COLS1%" -m2 "%ROWS2%,%COLS2%"
