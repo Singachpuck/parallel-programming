@@ -1,11 +1,14 @@
 package com.kpi.multithreading.mpi;
 
 import mpi.MPI;
+import mpi.Request;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
-public class StringMatrixMultiplicationMpi {
+public class AsyncStringMatrixMultiplicationMpi {
 
     public static void main(String[] args) {
         MPI.Init(args);
@@ -72,22 +75,33 @@ public class StringMatrixMultiplicationMpi {
                             }
                         }
 
-                        MPI.COMM_WORLD.Send(sendRows, 0, nRows, MPI.OBJECT, i + 1, Tags.SEND_ROW.get());
-                        MPI.COMM_WORLD.Send(new int[] { colsShift }, 0, 1, MPI.INT, i + 1, Tags.SEND_COL.get());
-                        MPI.COMM_WORLD.Send(new int[] { nCols }, 0, 1, MPI.INT, i + 1, Tags.SEND_COL.get());
-                        MPI.COMM_WORLD.Send(sendCols, 0, nCols, MPI.OBJECT, i + 1, Tags.SEND_COL.get());
+                        MPI.COMM_WORLD.Isend(sendRows, 0, nRows, MPI.OBJECT, i + 1, Tags.SEND_ROW.get());
+                        MPI.COMM_WORLD.Isend(new int[] { colsShift }, 0, 1, MPI.INT, i + 1, Tags.SEND_COL_SHIFT.get());
+                        MPI.COMM_WORLD.Isend(new int[] { nCols }, 0, 1, MPI.INT, i + 1, Tags.SEND_COL_SIZE.get());
+                        MPI.COMM_WORLD.Isend(sendCols, 0, nCols, MPI.OBJECT, i + 1, Tags.SEND_COL.get());
                     }
 
                     final int[] nRows = new int[1];
                     final int[][] result = new int[matrixSize[0]][matrixSize[3]];
                     int current = 0, i = 0;
 
+                    final List<Request> requests = new ArrayList<>();
                     long before = System.nanoTime();
                     while (current < matrixSize[0]) {
-                        MPI.COMM_WORLD.Recv(nRows, 0, 1, MPI.INT, i + 1, Tags.RECV_ROWS.get());
-                        MPI.COMM_WORLD.Recv(result, current, nRows[0], MPI.OBJECT, i + 1, Tags.RECV_ROWS.get());
+                        MPI.COMM_WORLD.Recv(nRows, 0, 1, MPI.INT, i + 1, Tags.RECV_ROWS_SIZE.get());
+                        final Request request = MPI.COMM_WORLD.Irecv(result,
+                                current,
+                                nRows[0],
+                                MPI.OBJECT,
+                                i + 1,
+                                Tags.RECV_ROWS.get());
+                        requests.add(request);
                         current += nRows[0];
                         i++;
+                    }
+
+                    for (Request request : requests) {
+                        request.Wait();
                     }
                     long after = System.nanoTime();
 
@@ -101,8 +115,6 @@ public class StringMatrixMultiplicationMpi {
             } else if (processorRank <= numberOfWorkers) {
                 final boolean isLast = processorRank == numberOfWorkers;
                 final int nRows = isLast ? lastRows : rows;
-                int[] nCols = new int[1];
-                int[] colsShift = new int[1];
 
                 final int[][] recvRows = new int[nRows][matrixSize[1]];
                 MPI.COMM_WORLD.Recv(recvRows, 0, nRows, MPI.OBJECT, distributeProcessor, Tags.SEND_ROW.get());
@@ -110,19 +122,49 @@ public class StringMatrixMultiplicationMpi {
 //                System.out.println(processorRank + " received rows:" + Arrays.toString(recvRows[i]));
 //            }
 
-                MPI.COMM_WORLD.Recv(colsShift, 0, 1, MPI.INT, 0, Tags.SEND_COL.get());
-                MPI.COMM_WORLD.Recv(nCols, 0, 1, MPI.INT, distributeProcessor, Tags.SEND_COL.get());
+                final int prev = processorRank == numberOfWorkers ? 1 : processorRank + 1;
+                final int next = processorRank == 1 ? numberOfWorkers : processorRank - 1;
+                int[] nCols = new int[1];
+                int[] colsShift = new int[1];
+                Request nColsRequest = MPI.COMM_WORLD.Irecv(nCols,
+                        0,
+                        1, MPI.INT,
+                        distributeProcessor,
+                        Tags.SEND_COL_SIZE.get());
+                nColsRequest.Wait();
                 int[][] recvCols = new int[nCols[0]][matrixSize[2]];
-                MPI.COMM_WORLD.Recv(recvCols, 0, nCols[0], MPI.OBJECT, distributeProcessor, Tags.SEND_COL.get());
+                Request recvColsRequest = MPI.COMM_WORLD.Irecv(recvCols,
+                        0, nCols[0],
+                        MPI.OBJECT,
+                        distributeProcessor,
+                        Tags.SEND_COL.get());
                 final int[][] calcRow = new int[nRows][matrixSize[3]];
+                MPI.COMM_WORLD.Recv(colsShift, 0, 1, MPI.INT, 0, Tags.SEND_COL_SHIFT.get());
                 int current = colsShift[0];
                 for (int col = 0; col < numberOfWorkers; col++) {
-//                if (processorRank == 2) {
-//                    for (int i = 0; i < nCols[0]; i++) {
-//                        System.out.println(processorRank + " received cols:" + Arrays.toString(recvCols[i]));
-//                    }
-//                }
+                    MPI.COMM_WORLD.Isend(new int[]{ nCols[0] },
+                            0,
+                            1,
+                            MPI.INT,
+                            next,
+                            Tags.SEND_COL_SIZE.get());
+                    recvColsRequest.Wait();
 
+//                    if (processorRank == 2) {
+//                        for (int i = 0; i < nCols[0]; i++) {
+//                            System.out.println(processorRank + " received cols:" + Arrays.toString(recvCols[i]));
+//                        }
+//                    }
+                    final int[][] sendCols = new int[nCols[0]][matrixSize[3]];
+                    for (int j = 0; j < nCols[0]; j++) {
+                        System.arraycopy(recvCols[j], 0, sendCols[j], 0, recvCols[j].length);
+                    }
+                    MPI.COMM_WORLD.Isend(sendCols,
+                            0,
+                            sendCols.length,
+                            MPI.OBJECT,
+                            next,
+                            Tags.SEND_COL.get());
                     final int lastCurrent = current;
                     for (int i = 0; i < nRows; i++) {
                         for (int j = 0; j < nCols[0]; j++) {
@@ -136,64 +178,81 @@ public class StringMatrixMultiplicationMpi {
                         }
                     }
 
-
-//                if (processorRank == 2 && col == 0) {
-//                    System.out.println();
-//                    MatrixUtil.printMatrix(calcRow);
-//                }
-
-//                if (processorRank == 2) {
-//                    MatrixUtil.printMatrix(calcRow);
-//                }
-
-                    if (col == numberOfWorkers - 1) {
-                        break;
-                    }
-                    final int prev = processorRank == numberOfWorkers ? 1 : processorRank + 1;
-                    final int next = processorRank == 1 ? numberOfWorkers : processorRank - 1;
-                    final int[][] sendCols = new int[nCols[0]][matrixSize[3]];
-                    for (int j = 0; j < nCols[0]; j++) {
-                        System.arraycopy(recvCols[j], 0, sendCols[j], 0, recvCols[j].length);
-                    }
-                    MPI.COMM_WORLD.Sendrecv(
-                            new int[]{ nCols[0] },
-                            0,
-                            1,
-                            MPI.INT,
-                            next,
-                            Tags.SEND_COL.get(),
+                    nColsRequest = MPI.COMM_WORLD.Irecv(
                             nCols,
                             0,
                             1,
                             MPI.INT,
                             prev,
-                            Tags.SEND_COL.get()
-                    );
+                            Tags.SEND_COL_SIZE.get());
+
+                    nColsRequest.Wait();
                     if (recvCols.length < nCols[0]) {
                         recvCols = new int[nCols[0]][matrixSize[3]];
                     }
-                    MPI.COMM_WORLD.Sendrecv(sendCols,
-                            0,
-                            sendCols.length,
-                            MPI.OBJECT,
-                            next,
-                            Tags.SEND_COL.get(),
+                    recvColsRequest = MPI.COMM_WORLD.Irecv(
                             recvCols,
                             0,
                             nCols[0],
                             MPI.OBJECT,
                             prev,
                             Tags.SEND_COL.get());
+
+//                if (processorRank == 2 && col == 0) {
+//                    System.out.println();
+//                    printMatrix(calcRow);
+//                }
+
+//                if (processorRank == 2) {
+//                    printMatrix(calcRow);
+//                }
+
+//                    if (col == numberOfWorkers - 1) {
+//                        break;
+//                    }
+//                    final int[][] sendCols = new int[nCols[0]][matrixSize[3]];
+//                    for (int j = 0; j < nCols[0]; j++) {
+//                        System.arraycopy(recvCols[j], 0, sendCols[j], 0, recvCols[j].length);
+//                    }
+//                    MPI.COMM_WORLD.Sendrecv(
+//                            new int[]{ nCols[0] },
+//                            0,
+//                            1,
+//                            MPI.INT,
+//                            next,
+//                            Tags.SEND_COL.get(),
+//                            nCols,
+//                            0,
+//                            1,
+//                            MPI.INT,
+//                            prev,
+//                            Tags.SEND_COL.get()
+//                    );
+//                    if (recvCols.length < nCols[0]) {
+//                        recvCols = new int[nCols[0]][matrixSize[3]];
+//                    }
+//                    MPI.COMM_WORLD.Sendrecv(sendCols,
+//                            0,
+//                            sendCols.length,
+//                            MPI.OBJECT,
+//                            next,
+//                            Tags.SEND_COL.get(),
+//                            recvCols,
+//                            0,
+//                            nCols[0],
+//                            MPI.OBJECT,
+//                            prev,
+//                            Tags.SEND_COL.get());
                 }
 //            if (processorRank == 3) {
 //                System.out.println();
-//                MatrixUtil.printMatrix(calcRow);
+//                printMatrix(calcRow);
 //            }
-                MPI.COMM_WORLD.Send(new int[] { nRows }, 0, 1, MPI.INT, 0, Tags.RECV_ROWS.get());
+                MPI.COMM_WORLD.Send(new int[] { nRows }, 0, 1, MPI.INT, 0, Tags.RECV_ROWS_SIZE.get());
                 MPI.COMM_WORLD.Send(calcRow, 0, nRows, MPI.OBJECT, 0, Tags.RECV_ROWS.get());
-//            for (int i = 0; i < nRows; i++) {
-//                System.out.println(Arrays.toString(calcRow[i]));
-//            }
+//                for (int i = 0; i < nRows; i++) {
+//                    System.out.println(Arrays.toString(calcRow[i]));
+//                }
             }
         } finally {
             MPI.Finalize();

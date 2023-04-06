@@ -31,16 +31,54 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                 <configuration>
-                    <archive>
-                        <manifest>
-<!--                            <addClasspath>true</addClasspath>-->
-                            <mainClass>com.kpi.multithreading.mpi.StringMatrixMultiplicationMpi</mainClass>
-                        </manifest>
-                    </archive>
                     <finalName>${jar.finalName}</finalName>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>blocking-communication</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.0.2</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.kpi.multithreading.mpi.StringMatrixMultiplicationMpi</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>non-blocking-communication</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.0.2</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.kpi.multithreading.mpi.AsyncStringMatrixMultiplicationMpi</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
