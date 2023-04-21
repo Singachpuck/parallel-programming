@@ -53,6 +53,7 @@ class TextAnalyserTest {
     @MethodSource("keywordsText")
     void wordExtractTest(String text) {
         System.out.println("Text size: " + text.length());
+        long before = System.nanoTime();
         final Map<Integer, Integer> wordSizes = wordSizeExtractor.extractWordSizes(text);
         wordSizes.forEach((k, v) -> {
             Assertions.assertNotEquals(0, v);
@@ -61,17 +62,20 @@ class TextAnalyserTest {
 
         double average = wordSizeAnalyser.getAverage(wordSizes);
         double dispersion = wordSizeAnalyser.getDispersion(wordSizes);
+        long after = System.nanoTime();
         Assertions.assertTrue(average > 0);
         Assertions.assertTrue(dispersion > 0);
         System.out.println("Average: " + average);
         System.out.println("Dispersion: " + dispersion);
+        System.out.println("Elapsed time: " + (after - before) / 1_000_000_000D);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = "/texts/text1.txt")
+    @ValueSource(strings = {"/texts/text1.txt", "/texts/text2.txt", "/texts/lorem.txt", "/texts/energy.txt", "/texts/don-test-xl.html"})
     void analyseLarge(String pathToText) throws IOException, URISyntaxException {
         final String text = this.readText(pathToText);
         System.out.println("Text size: " + text.length());
+        long before = System.nanoTime();
         final Map<Integer, Integer> wordSizes = wordSizeExtractor.extractWordSizes(text);
         wordSizes.forEach((k, v) -> {
             Assertions.assertNotEquals(0, v);
@@ -79,10 +83,12 @@ class TextAnalyserTest {
 
         double average = wordSizeAnalyser.getAverage(wordSizes);
         double dispersion = wordSizeAnalyser.getDispersion(wordSizes);
+        long after = System.nanoTime();
         Assertions.assertTrue(average > 0);
         Assertions.assertTrue(dispersion > 0);
         System.out.println("Average: " + average);
         System.out.println("Dispersion: " + dispersion);
+        System.out.println("Elapsed time: " + (after - before) / 1_000_000_000D);
     }
 
     private String readText(String pathToText) throws IOException, URISyntaxException {
