@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class StringMultiplyMatrixForkJoinTest {
+class MultiplyMatrixForkJoinTest {
 
     private final double[][] t1 = new double[][] {
             {1, 2, 3, 4},
@@ -54,7 +54,7 @@ class StringMultiplyMatrixForkJoinTest {
 
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
-    @Order(4)
+    @Order(1)
     void forkJoinMultiplyMatrixTestSmall(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
         long before = System.nanoTime();
         Matrix multiplyM = stringMultiplyMatrix.multiply(m1, m2);
@@ -66,22 +66,50 @@ class StringMultiplyMatrixForkJoinTest {
 
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
-    @Order(5)
-    void forkJoinMultiplyMatrixTestMedium(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
-        final Matrix m1 = MatrixFactory.getRandomMatrix(100, 100);
-        final Matrix m2 = MatrixFactory.getRandomMatrix(100, 100);
+    @Order(2)
+    void forkJoinMultiplyMatrixTest50(ForkJoinMultiplyMatrix forkJoinMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(50, 50);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(50, 50);
 
         long before = System.nanoTime();
-        stringMultiplyMatrix.multiply(m1, m2);
+        forkJoinMultiplyMatrix.multiply(m1, m2);
         long after = System.nanoTime();
 
-        System.out.println("Execution time forkJoinMultiplyMatrixTestMedium: " + (after - before) / 1_000_000_000D);
+        System.out.println("Execution time forkJoinMultiplyMatrixTest50: " + (after - before) / 1_000_000_000D);
     }
 
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
-    @Order(6)
-    void forkJoinMultiplyMatrixTestBig(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
+    @Order(3)
+    void forkJoinMultiplyMatrixTest100(ForkJoinMultiplyMatrix forkJoinMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(100, 100);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(100, 100);
+
+        long before = System.nanoTime();
+        forkJoinMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time forkJoinMultiplyMatrixTest100: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringMultiplyMatrixSupply")
+    @Order(4)
+    void forkJoinMultiplyMatrixTest500(ForkJoinMultiplyMatrix forkJoinMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(500, 500);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(500, 500);
+
+        long before = System.nanoTime();
+        forkJoinMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time forkJoinMultiplyMatrixTest500: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringMultiplyMatrixSupply")
+    @Order(5)
+    void forkJoinMultiplyMatrixTest1000(ForkJoinMultiplyMatrix stringMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(1000, 1000);
         final Matrix m2 = MatrixFactory.getRandomMatrix(1000, 1000);
 
@@ -89,7 +117,21 @@ class StringMultiplyMatrixForkJoinTest {
         stringMultiplyMatrix.multiply(m1, m2);
         long after = System.nanoTime();
 
-        System.out.println("Execution time forkJoinMultiplyMatrixTestBig: " + (after - before) / 1_000_000_000D);
+        System.out.println("Execution time forkJoinMultiplyMatrixTest1000: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringMultiplyMatrixSupply")
+    @Order(6)
+    void forkJoinMultiplyMatrixTest2000(ForkJoinMultiplyMatrix forkJoinMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(2000, 2000);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(2000, 2000);
+
+        long before = System.nanoTime();
+        forkJoinMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time forkJoinMultiplyMatrixTest2000: " + (after - before) / 1_000_000_000D);
     }
 
     void assertMatrix(Matrix m) {
@@ -109,5 +151,4 @@ class StringMultiplyMatrixForkJoinTest {
             }
         }
     }
-
 }
