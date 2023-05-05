@@ -18,15 +18,25 @@ rem Build application
 echo:
 echo Start building application...
 echo:
+
+if "%MODE%"=="BLOCKING" (set PROFILE=blocking-communication)
+if "%MODE%"=="NON_BLOCKING" (set PROFILE=non-blocking-communication)
+if "%MODE%"=="SIMPLE" (set PROFILE=simple-blocking)
+if "%MODE%"=="SIMPLE_NON_BLOCKING" (set PROFILE=simple-non-blocking)
+
+echo Using mode: %MODE%
+echo:
+
 set PROJECT_NAME=mpi-project
-call mvn clean package -Djar.finalName=%PROJECT_NAME%
+call mvn clean package -Djar.finalName=%PROJECT_NAME% -P %PROFILE%
 
 rem Run mpi application
 echo:
 echo Running mpi application
 echo:
-if not defined ROWS1 (set ROWS1=1000)
-if not defined COLS1 (set COLS1=1000)
-if not defined ROWS2 (set ROWS2=1000)
-if not defined COLS2 (set COLS2=1000)
+if not defined ROWS1 (set ROWS1=10)
+if not defined COLS1 (set COLS1=10)
+if not defined ROWS2 (set ROWS2=10)
+if not defined COLS2 (set COLS2=10)
+
 call %MPJ_HOME%/bin/mpjrun.bat -np 7 -jar target/%PROJECT_NAME%.jar -m1 "%ROWS1%,%COLS1%" -m2 "%ROWS2%,%COLS2%"

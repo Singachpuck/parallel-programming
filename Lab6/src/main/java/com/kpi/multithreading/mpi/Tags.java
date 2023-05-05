@@ -2,7 +2,7 @@ package com.kpi.multithreading.mpi;
 
 public enum Tags {
     SEND_ROW(1), SEND_COL(2), RECV_ROWS(3),
-    SEND_COL_SIZE(4), SEND_COL_SHIFT(5), RECV_ROWS_SIZE(6);
+    SEND_COL_SIZE(4), SEND_COL_SHIFT(5), RECV_ROWS_SIZE(6), RECV_ROWS_SHIFT(7), SEND_ROW_SHIFT(8), SEND_ROW_SIZE(9);
 
     private final int value;
 

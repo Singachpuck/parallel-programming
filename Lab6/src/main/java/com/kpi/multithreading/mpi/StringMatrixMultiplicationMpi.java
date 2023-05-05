@@ -3,8 +3,10 @@ package com.kpi.multithreading.mpi;
 import mpi.MPI;
 
 import java.util.Arrays;
-import java.util.Random;
 
+/**
+ * This is a non non-working example
+ */
 public class StringMatrixMultiplicationMpi {
 
     public static void main(String[] args) {
@@ -45,11 +47,11 @@ public class StringMatrixMultiplicationMpi {
                     final int[][] matrix1 = MatrixUtil.generateRandomMatrix(matrixSize[0], matrixSize[1]);
                     final int[][] matrix2 = MatrixUtil.generateRandomMatrix(matrixSize[2], matrixSize[3]);
 
-//                    System.out.println("Matrix 1:");
-//                    MatrixUtil.printMatrix(matrix1);
-//
-//                    System.out.println("Matrix 2:");
-//                    MatrixUtil.printMatrix(matrix2);
+                    System.out.println("Matrix 1:");
+                    MatrixUtil.printMatrix(matrix1);
+
+                    System.out.println("Matrix 2:");
+                    MatrixUtil.printMatrix(matrix2);
 
                     if (matrix1[0].length != matrix2.length) {
                         throw new IllegalArgumentException("Matrices are no compatible!");
@@ -106,9 +108,6 @@ public class StringMatrixMultiplicationMpi {
 
                 final int[][] recvRows = new int[nRows][matrixSize[1]];
                 MPI.COMM_WORLD.Recv(recvRows, 0, nRows, MPI.OBJECT, distributeProcessor, Tags.SEND_ROW.get());
-//            for (int i = 0; i < nRows; i++) {
-//                System.out.println(processorRank + " received rows:" + Arrays.toString(recvRows[i]));
-//            }
 
                 MPI.COMM_WORLD.Recv(colsShift, 0, 1, MPI.INT, 0, Tags.SEND_COL.get());
                 MPI.COMM_WORLD.Recv(nCols, 0, 1, MPI.INT, distributeProcessor, Tags.SEND_COL.get());
@@ -116,12 +115,12 @@ public class StringMatrixMultiplicationMpi {
                 MPI.COMM_WORLD.Recv(recvCols, 0, nCols[0], MPI.OBJECT, distributeProcessor, Tags.SEND_COL.get());
                 final int[][] calcRow = new int[nRows][matrixSize[3]];
                 int current = colsShift[0];
+                for (int i = 0; i < nRows; i++) {
+                    System.out.println(processorRank + " received rows:" + Arrays.toString(recvRows[i]));
+                }
+
+                System.out.println(numberOfWorkers);
                 for (int col = 0; col < numberOfWorkers; col++) {
-//                if (processorRank == 2) {
-//                    for (int i = 0; i < nCols[0]; i++) {
-//                        System.out.println(processorRank + " received cols:" + Arrays.toString(recvCols[i]));
-//                    }
-//                }
 
                     final int lastCurrent = current;
                     for (int i = 0; i < nRows; i++) {
@@ -184,6 +183,11 @@ public class StringMatrixMultiplicationMpi {
                             MPI.OBJECT,
                             prev,
                             Tags.SEND_COL.get());
+                    if (processorRank == 1) {
+                        for (int i = 0; i < nCols[0]; i++) {
+                            System.out.println(processorRank + " received cols:" + Arrays.toString(recvCols[i]));
+                        }
+                    }
                 }
 //            if (processorRank == 3) {
 //                System.out.println();

@@ -4,10 +4,12 @@ import mpi.MPI;
 import mpi.Request;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.util.stream.IntStream;
 
+/**
+ * This is a non non-working example
+ */
 public class AsyncStringMatrixMultiplicationMpi {
 
     public static void main(String[] args) {
@@ -89,20 +91,20 @@ public class AsyncStringMatrixMultiplicationMpi {
                     long before = System.nanoTime();
                     while (current < matrixSize[0]) {
                         MPI.COMM_WORLD.Recv(nRows, 0, 1, MPI.INT, i + 1, Tags.RECV_ROWS_SIZE.get());
-                        final Request request = MPI.COMM_WORLD.Irecv(result,
+                        MPI.COMM_WORLD.Recv(result,
                                 current,
                                 nRows[0],
                                 MPI.OBJECT,
                                 i + 1,
                                 Tags.RECV_ROWS.get());
-                        requests.add(request);
+//                        requests.add(request);
                         current += nRows[0];
                         i++;
                     }
 
-                    for (Request request : requests) {
-                        request.Wait();
-                    }
+//                    for (Request request : requests) {
+//                        request.Wait();
+//                    }
                     long after = System.nanoTime();
 
 //                    System.out.println("Result:");
@@ -124,79 +126,165 @@ public class AsyncStringMatrixMultiplicationMpi {
 
                 final int prev = processorRank == numberOfWorkers ? 1 : processorRank + 1;
                 final int next = processorRank == 1 ? numberOfWorkers : processorRank - 1;
-                int[] nCols = new int[1];
-                int[] colsShift = new int[1];
-                Request nColsRequest = MPI.COMM_WORLD.Irecv(nCols,
-                        0,
-                        1, MPI.INT,
+                final int[] offsets = new int[numberOfWorkers];
+                final Request[] offsetRequests = new Request[numberOfWorkers];
+                final int[] nCols = new int[numberOfWorkers];
+                final Request[] nColsRequests = new Request[numberOfWorkers];
+                final Request[] colRequests = new Request[numberOfWorkers];
+
+                MPI.COMM_WORLD.Recv(offsets,
+                        processorRank - 1,
+                        1,
+                        MPI.INT,
+                        distributeProcessor,
+                        Tags.SEND_COL_SHIFT.get());
+                MPI.COMM_WORLD.Recv(nCols,
+                        processorRank - 1,
+                        1,
+                        MPI.INT,
                         distributeProcessor,
                         Tags.SEND_COL_SIZE.get());
-                nColsRequest.Wait();
-                int[][] recvCols = new int[nCols[0]][matrixSize[2]];
-                Request recvColsRequest = MPI.COMM_WORLD.Irecv(recvCols,
-                        0, nCols[0],
+
+                IntStream.range(0, numberOfWorkers)
+                        .filter(w -> w != processorRank - 1)
+                        .forEach(w -> {
+                    MPI.COMM_WORLD.Isend(offsets,
+                            processorRank - 1,
+                            1,
+                            MPI.INT,
+                            w + 1,
+                            Tags.SEND_COL_SHIFT.get());
+                    MPI.COMM_WORLD.Isend(nCols,
+                            processorRank - 1,
+                            1,
+                            MPI.INT,
+                            w + 1,
+                            Tags.SEND_COL_SIZE.get());
+
+                    offsetRequests[w] = MPI.COMM_WORLD.Irecv(offsets,
+                            w,
+                            1,
+                            MPI.INT,
+                            w + 1,
+                            Tags.SEND_COL_SHIFT.get());
+                    nColsRequests[w] = MPI.COMM_WORLD.Irecv(nCols,
+                            w,
+                            1,
+                            MPI.INT,
+                            w + 1,
+                            Tags.SEND_COL_SIZE.get());
+                });
+
+                int[][] recvCols = new int[matrixSize[3]][matrixSize[2]];
+
+                colRequests[processorRank - 1] = MPI.COMM_WORLD.Irecv(recvCols,
+                        offsets[processorRank - 1],
+                        nCols[processorRank - 1],
                         MPI.OBJECT,
                         distributeProcessor,
                         Tags.SEND_COL.get());
+//                for (int i = 0; i < numberOfWorkers; i++) {
+//                    final int source;
+//                    if (i == processorRank - 1) {
+//                        source = distributeProcessor;
+//                    } else {
+//                        source = i + 1;
+//                        offsetRequests[i].Wait();
+//                        nColsRequests[i].Wait();
+//                    }
+//
+//                    colRequests[i] = MPI.COMM_WORLD.Irecv(recvCols,
+//                            offsets[i],
+//                            nCols[i],
+//                            MPI.OBJECT,
+//                            source,
+//                            Tags.SEND_COL.get());
+//                }
+
+                colRequests[processorRank - 1].Wait();
+                IntStream.range(0, numberOfWorkers)
+                        .filter(w -> w != processorRank - 1)
+                        .forEach(w -> {
+                            offsetRequests[w].Wait();
+                            nColsRequests[w].Wait();
+                            MPI.COMM_WORLD.Isend(recvCols,
+                                    offsets[processorRank - 1],
+                                    nCols[processorRank - 1],
+                                    MPI.OBJECT,
+                                    w + 1,
+                                    Tags.SEND_COL.get());
+                            colRequests[w] = MPI.COMM_WORLD.Irecv(recvCols,
+                                    offsets[w],
+                                    nCols[w],
+                                    MPI.OBJECT,
+                                    w + 1,
+                                    Tags.SEND_COL.get());
+                        });
+
+//                    if (processorRank == 2) {
+//                        for (int i = 0; i < nCols[processorRank - 1]; i++) {
+//                            System.out.println(processorRank + " received cols:" + Arrays.toString(recvCols[offsets[processorRank - 1]]));
+//                        }
+//                    }
+//                System.out.println(offsets[processorRank - 1]);
+//                try {
+//                    Thread.sleep(3000);
+//                } catch (InterruptedException e) {}
+
                 final int[][] calcRow = new int[nRows][matrixSize[3]];
-                MPI.COMM_WORLD.Recv(colsShift, 0, 1, MPI.INT, 0, Tags.SEND_COL_SHIFT.get());
-                int current = colsShift[0];
                 for (int col = 0; col < numberOfWorkers; col++) {
-                    MPI.COMM_WORLD.Isend(new int[]{ nCols[0] },
-                            0,
-                            1,
-                            MPI.INT,
-                            next,
-                            Tags.SEND_COL_SIZE.get());
-                    recvColsRequest.Wait();
 
 //                    if (processorRank == 2) {
 //                        for (int i = 0; i < nCols[0]; i++) {
 //                            System.out.println(processorRank + " received cols:" + Arrays.toString(recvCols[i]));
 //                        }
 //                    }
-                    final int[][] sendCols = new int[nCols[0]][matrixSize[3]];
-                    for (int j = 0; j < nCols[0]; j++) {
-                        System.arraycopy(recvCols[j], 0, sendCols[j], 0, recvCols[j].length);
-                    }
-                    MPI.COMM_WORLD.Isend(sendCols,
-                            0,
-                            sendCols.length,
-                            MPI.OBJECT,
-                            next,
-                            Tags.SEND_COL.get());
-                    final int lastCurrent = current;
+//                    final int[][] sendCols = new int[nCols[0]][matrixSize[3]];
+//                    for (int j = 0; j < nCols[0]; j++) {
+//                        System.arraycopy(recvCols[j], 0, sendCols[j], 0, recvCols[j].length);
+//                    }
+//                    MPI.COMM_WORLD.Isend(sendCols,
+//                            0,
+//                            sendCols.length,
+//                            MPI.OBJECT,
+//                            next,
+//                            Tags.SEND_COL.get());
+//                    final int lastCurrent = current;
+//                    while (colRequests[col].Test() == null) {
+//                        try {
+//                            Thread.sleep(100);
+//                        } catch (InterruptedException e) {
+//
+//                        }
+//                    }
+                    colRequests[col].Wait();
                     for (int i = 0; i < nRows; i++) {
-                        for (int j = 0; j < nCols[0]; j++) {
+                        for (int j = 0; j < nCols[col]; j++) {
                             for (int k = 0; k < matrixSize[2]; k++) {
-                                calcRow[i][current] += recvRows[i][k] * recvCols[j][k];
+                                calcRow[i][offsets[col] + j] += recvRows[i][k] * recvCols[offsets[col] + j][k];
                             }
-                            current = (current + 1) % matrixSize[3];
-                        }
-                        if (i != nRows - 1) {
-                            current = lastCurrent;
                         }
                     }
 
-                    nColsRequest = MPI.COMM_WORLD.Irecv(
-                            nCols,
-                            0,
-                            1,
-                            MPI.INT,
-                            prev,
-                            Tags.SEND_COL_SIZE.get());
-
-                    nColsRequest.Wait();
-                    if (recvCols.length < nCols[0]) {
-                        recvCols = new int[nCols[0]][matrixSize[3]];
-                    }
-                    recvColsRequest = MPI.COMM_WORLD.Irecv(
-                            recvCols,
-                            0,
-                            nCols[0],
-                            MPI.OBJECT,
-                            prev,
-                            Tags.SEND_COL.get());
+//                    nColsRequest = MPI.COMM_WORLD.Irecv(
+//                            nCols,
+//                            0,
+//                            1,
+//                            MPI.INT,
+//                            prev,
+//                            Tags.SEND_COL_SIZE.get());
+//
+//                    nColsRequest.Wait();
+//                    if (recvCols.length < nCols[0]) {
+//                        recvCols = new int[nCols[0]][matrixSize[3]];
+//                    }
+//                    recvColsRequest = MPI.COMM_WORLD.Irecv(
+//                            recvCols,
+//                            0,
+//                            nCols[0],
+//                            MPI.OBJECT,
+//                            prev,
+//                            Tags.SEND_COL.get());
 
 //                if (processorRank == 2 && col == 0) {
 //                    System.out.println();
