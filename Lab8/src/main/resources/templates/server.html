@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Server data calculation</title>
+    <th:block th:replace="fragments/fragment.html :: no-wrap"></th:block>
+</head>
+<body>
+    <form id="matrix-form" action="#">
+        <th:block th:replace="fragments/fragment.html :: size"></th:block>
+        <th:block th:replace="fragments/fragment.html :: threads"></th:block>
+        <button id="submit-matrix" type="submit">Take data from server and calculate</button>
+    </form>
+
+    <div id="result" style="font-size: 24px;"></div>
+
+    <script>
+        const matrixForm = document.querySelector('#matrix-form'),
+            submit = matrixForm.querySelector('#submit-matrix'),
+            result = document.querySelector('#result');
+
+        submit.addEventListener('click', e => {
+           e.preventDefault();
+
+           let size = document.querySelector('input[name="size"]:checked').value || '50',
+           nThread = document.querySelector('input[name="n_thread"]:checked').value || '6';
+
+           let before = Date.now();
+           fetch('/api/serverData?' + new URLSearchParams({
+               size,
+               nThread
+           }), {
+               method: 'GET'
+           }).then(response => response.json())
+               .then(json => {
+                   let elapsedTime = Date.now() - before;
+                   result.innerHTML = `Elapsed time: ${elapsedTime / 1000}s<br>Result:<br>` + json.result.replaceAll('\n', '<br>');
+               })
+               .catch(err => console.log(err));
+        });
+    </script>
+</body>
+</html>

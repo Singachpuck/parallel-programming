@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Client data calculation</title>
+    <th:block th:replace="fragments/fragment.html :: no-wrap"></th:block>
+</head>
+<body>
+<form id="matrix-form" action="#">
+    <th:block th:replace="fragments/fragment.html :: threads"></th:block>
+    <div>
+        <input type="file" name="matrixFile1">
+        <input type="file" name="matrixFile2">
+    </div>
+    <button id="submit-matrices" type="submit">Calculate</button>
+</form>
+
+<div id="result" style="font-size: 24px;"></div>
+
+<script>
+    const matrixForm = document.querySelector('#matrix-form'),
+        matrixFileInput1 = document.querySelector('input[name=matrixFile1]'),
+        matrixFileInput2 = document.querySelector('input[name=matrixFile2]'),
+        submit = matrixForm.querySelector('#submit-matrices'),
+        result = document.querySelector('#result');
+
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+            const base64String = reader.result
+                .replace('data:', '')
+                .replace(/^.+,/, '');
+
+            resolve(base64String);
+        };
+        reader.onerror = reject;
+    });
+
+    submit.addEventListener('click', async e => {
+        e.preventDefault();
+
+        let matrixFile1 = await toBase64(matrixFileInput1.files[0]),
+            matrixFile2 = await toBase64(matrixFileInput2.files[0]),
+            nThread = document.querySelector('input[name="n_thread"]:checked').value || '6';
+
+        let request = JSON.stringify({
+            nThread,
+            matrixFile1,
+            matrixFile2
+        });
+
+        let before = Date.now();
+        fetch('/api/clientData', {
+            method: 'POST',
+            body: request,
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        }).then(response => response.json())
+            .then(json => {
+                let elapsedTime = Date.now() - before;
+                result.innerHTML = `Elapsed time: ${elapsedTime / 1000}s<br>Result:<br>` + json.result.replaceAll('\n', '<br>');
+            })
+            .catch(err => console.log(err));
+    })
+</script>
+</body>
+</html>
