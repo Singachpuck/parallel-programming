@@ -64,4 +64,19 @@ public class Matrix {
     public int getWidth() {
         return width;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < table.length; i++) {
+            for (int j = 0; j < table[i].length; j++) {
+                sb.append(table[i][j]);
+                if (j != table[i].length - 1) {
+                    sb.append(' ');
+                }
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
 }

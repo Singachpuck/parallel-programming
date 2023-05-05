@@ -97,7 +97,11 @@ class MultiplyMatrixTest {
                 Arguments.of(new StringMultiplyMatrix(2)),
                 Arguments.of(new StringMultiplyMatrix(4)),
                 Arguments.of(new StringMultiplyMatrix(6)),
-                Arguments.of(new StringMultiplyMatrix(8))
+                Arguments.of(new StringMultiplyMatrix(8)),
+                Arguments.of(new StringMultiplyMatrix(10)),
+                Arguments.of(new StringMultiplyMatrix(12)),
+                Arguments.of(new StringMultiplyMatrix(14)),
+                Arguments.of(new StringMultiplyMatrix(20))
         );
     }
 
@@ -106,7 +110,11 @@ class MultiplyMatrixTest {
                 Arguments.of(new FoxMultiplyMatrix(2)),
                 Arguments.of(new FoxMultiplyMatrix(4)),
                 Arguments.of(new FoxMultiplyMatrix(6)),
-                Arguments.of(new FoxMultiplyMatrix(8))
+                Arguments.of(new FoxMultiplyMatrix(8)),
+                Arguments.of(new FoxMultiplyMatrix(10)),
+                Arguments.of(new FoxMultiplyMatrix(12)),
+                Arguments.of(new FoxMultiplyMatrix(14)),
+                Arguments.of(new FoxMultiplyMatrix(20))
         );
     }
 
@@ -118,6 +126,7 @@ class MultiplyMatrixTest {
     }
 
     @Test
+    @Disabled
     @Order(1)
     void syncMultiplyTestSmall() {
         long before = System.nanoTime();
@@ -129,8 +138,23 @@ class MultiplyMatrixTest {
     }
 
     @Test
+    @Disabled
     @Order(2)
-    void syncMultiplyTestMedium() {
+    void syncMultiplyTest50() {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(50, 50);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(50, 50);
+
+        long before = System.nanoTime();
+        syncMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time syncMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @Test
+    @Disabled
+    @Order(2)
+    void syncMultiplyTest100() {
         final Matrix m1 = MatrixFactory.getRandomMatrix(100, 100);
         final Matrix m2 = MatrixFactory.getRandomMatrix(100, 100);
 
@@ -142,10 +166,53 @@ class MultiplyMatrixTest {
     }
 
     @Test
-    @Order(3)
-    void syncMultiplyTestBig() {
+    @Disabled
+    @Order(2)
+    void syncMultiplyTest500() {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(500, 500);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(500, 500);
+
+        long before = System.nanoTime();
+        syncMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time syncMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @Test
+    @Disabled
+    @Order(2)
+    void syncMultiplyTest1000() {
         final Matrix m1 = MatrixFactory.getRandomMatrix(1000, 1000);
         final Matrix m2 = MatrixFactory.getRandomMatrix(1000, 1000);
+
+        long before = System.nanoTime();
+        syncMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time syncMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @Test
+    @Disabled
+    @Order(3)
+    void syncMultiplyTest1500() {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(1500, 1500);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(1500, 1500);
+
+        long before = System.nanoTime();
+        syncMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Execution time syncMultiplyTest1500: " + (after - before) / 1_000_000_000D);
+    }
+
+    @Test
+    @Disabled
+    @Order(3)
+    void syncMultiplyTest2000() {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(2000, 2000);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(2000, 2000);
 
         long before = System.nanoTime();
         syncMultiplyMatrix.multiply(m1, m2);
@@ -169,7 +236,21 @@ class MultiplyMatrixTest {
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
     @Order(5)
-    void stringMultiplyTestMedium(StringMultiplyMatrix stringMultiplyMatrix) {
+    void stringMultiplyTest50(StringMultiplyMatrix stringMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(50, 50);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(50, 50);
+
+        long before = System.nanoTime();
+        stringMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Threads: " + stringMultiplyMatrix.getThreadNumber() + ". Execution time stringMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringMultiplyMatrixSupply")
+    @Order(5)
+    void stringMultiplyTest100(StringMultiplyMatrix stringMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(100, 100);
         final Matrix m2 = MatrixFactory.getRandomMatrix(100, 100);
 
@@ -182,10 +263,38 @@ class MultiplyMatrixTest {
 
     @ParameterizedTest
     @MethodSource("stringMultiplyMatrixSupply")
-    @Order(6)
-    void stringMultiplyTestBig(StringMultiplyMatrix stringMultiplyMatrix) {
+    @Order(5)
+    void stringMultiplyTest500(StringMultiplyMatrix stringMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(500, 500);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(500, 500);
+
+        long before = System.nanoTime();
+        stringMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Threads: " + stringMultiplyMatrix.getThreadNumber() + ". Execution time stringMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringMultiplyMatrixSupply")
+    @Order(5)
+    void stringMultiplyTest1000(StringMultiplyMatrix stringMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(1000, 1000);
         final Matrix m2 = MatrixFactory.getRandomMatrix(1000, 1000);
+
+        long before = System.nanoTime();
+        stringMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Threads: " + stringMultiplyMatrix.getThreadNumber() + ". Execution time stringMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringMultiplyMatrixSupply")
+    @Order(6)
+    void stringMultiplyTest2000(StringMultiplyMatrix stringMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(2000, 2000);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(2000, 2000);
 
         long before = System.nanoTime();
         stringMultiplyMatrix.multiply(m1, m2);
@@ -209,7 +318,21 @@ class MultiplyMatrixTest {
     @ParameterizedTest
     @MethodSource("foxMultiplyMatrixSupply")
     @Order(8)
-    void foxMultiplyTestMedium(FoxMultiplyMatrix foxMultiplyMatrix) {
+    void foxMultiplyTest50(FoxMultiplyMatrix foxMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(50, 50);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(50, 50);
+
+        long before = System.nanoTime();
+        foxMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Threads: " + foxMultiplyMatrix.getThreadNumber() + ". Execution time foxMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("foxMultiplyMatrixSupply")
+    @Order(8)
+    void foxMultiplyTest100(FoxMultiplyMatrix foxMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(100, 100);
         final Matrix m2 = MatrixFactory.getRandomMatrix(100, 100);
 
@@ -222,10 +345,38 @@ class MultiplyMatrixTest {
 
     @ParameterizedTest
     @MethodSource("foxMultiplyMatrixSupply")
-    @Order(9)
-    void foxMultiplyTestBig(FoxMultiplyMatrix foxMultiplyMatrix) {
+    @Order(8)
+    void foxMultiplyTest500(FoxMultiplyMatrix foxMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(500, 500);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(500, 500);
+
+        long before = System.nanoTime();
+        foxMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Threads: " + foxMultiplyMatrix.getThreadNumber() + ". Execution time foxMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("foxMultiplyMatrixSupply")
+    @Order(8)
+    void foxMultiplyTest1000(FoxMultiplyMatrix foxMultiplyMatrix) {
         final Matrix m1 = MatrixFactory.getRandomMatrix(1000, 1000);
         final Matrix m2 = MatrixFactory.getRandomMatrix(1000, 1000);
+
+        long before = System.nanoTime();
+        foxMultiplyMatrix.multiply(m1, m2);
+        long after = System.nanoTime();
+
+        System.out.println("Threads: " + foxMultiplyMatrix.getThreadNumber() + ". Execution time foxMultiplyTestMedium: " + (after - before) / 1_000_000_000D);
+    }
+
+    @ParameterizedTest
+    @MethodSource("foxMultiplyMatrixSupply")
+    @Order(9)
+    void foxMultiplyTest2000(FoxMultiplyMatrix foxMultiplyMatrix) {
+        final Matrix m1 = MatrixFactory.getRandomMatrix(2000, 2000);
+        final Matrix m2 = MatrixFactory.getRandomMatrix(2000, 2000);
 
         long before = System.nanoTime();
         foxMultiplyMatrix.multiply(m1, m2);
