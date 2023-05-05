@@ -25,4 +25,9 @@ public class Student {
     public String getGroup() {
         return group;
     }
+
+    @Override
+    public String toString() {
+        return String.format("[%s] %s(%d)", group, name, age);
+    }
 }

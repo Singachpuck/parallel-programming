@@ -73,16 +73,37 @@ public class Bank {
 //        }
 //    }
 
-    /** Solution 4 */
-    public void transfer(int from, int to, int amount) {
-        synchronized (accounts) {
-            accounts[from] -= amount;
-            accounts[to] += amount;
-            if (ntransacts.incrementAndGet() % NTEST == 0) {
-                test();
-                Thread.currentThread().interrupt();
+//    /** Solution 4 */
+//    public void transfer(int from, int to, int amount) {
+//        synchronized (accounts) {
+//            accounts[from] -= amount;
+//            accounts[to] += amount;
+//            if (ntransacts.incrementAndGet() % NTEST == 0) {
+//                test();
+//                Thread.currentThread().interrupt();
+//            }
+//        }
+//    }
+
+    /** Solution 5 */
+    public synchronized void transfer(int from, int to, int amount) {
+        while (accounts[from] < amount) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                System.err.println("Unexpected interruption!");
+                throw new RuntimeException(e);
             }
         }
+        accounts[from] -= amount;
+        accounts[to] += amount;
+        ntransacts.incrementAndGet();
+        if (ntransacts.get() % NTEST == 0) {
+            test();
+//            Thread.currentThread().interrupt();
+            throw new RuntimeException();
+        }
+        this.notifyAll();
     }
 
     public void test() {

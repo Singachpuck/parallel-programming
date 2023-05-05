@@ -1,7 +1,9 @@
 package com.kpi.multithreading.schooljounal;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,6 +35,7 @@ class ElectronicJournalTest {
         );
     }
 
+    @Disabled
     @RepeatedTest(100)
     void addGradeForStudentParallel() throws InterruptedException {
         final int people = 4;
@@ -54,6 +57,43 @@ class ElectronicJournalTest {
         }
 
         assertEquals(people * 1000, journal.getGrades().get(students.get(0)).size());
+    }
+
+    @RepeatedTest(10)
+    void addGradeForAllStudentsParallel() throws InterruptedException {
+        final int N = 5000;
+        final int people = 4;
+        final List<Thread> threads = new ArrayList<>();
+        final ElectronicJournal journal = new ElectronicJournal(new HashSet<>(students));
+
+        for (int i = 0; i < people; i++) {
+            final Thread t = new Thread(() -> {
+                for (int j = 0; j < N; j++) {
+                    journal.addGradeForStudent(students.get(random.nextInt(students.size())), this.getGrade());
+                }
+            });
+            t.start();
+            threads.add(t);
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        System.out.println(journal);
+
+        assertEquals(people * N, journal
+                .getGrades()
+                .values()
+                .stream()
+                .mapToInt(List::size)
+                .sum());
+    }
+
+    @Test
+    void printTest() {
+        final ElectronicJournal journal = new ElectronicJournal(new HashSet<>(students));
+        System.out.println(journal);
     }
 
     private int getGrade() {

@@ -16,7 +16,7 @@ public class IntegerProducer implements Runnable {
         final Random random = new Random();
 
         for (int i = 0; i < size; i++) {
-            drop.put(random.nextInt(Integer.MAX_VALUE));
+            drop.put(i);
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {}
