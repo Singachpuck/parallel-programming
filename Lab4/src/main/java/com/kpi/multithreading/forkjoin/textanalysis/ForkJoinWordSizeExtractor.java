@@ -3,21 +3,27 @@ package com.kpi.multithreading.forkjoin.textanalysis;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 
 public class ForkJoinWordSizeExtractor {
 
     public Map<Integer, Integer> extractWordSizes(String text) {
         text = text.trim().replaceAll("\\s+", " ");
+        final Map<Integer, Integer> wordSizes = new HashMap<>();
         final WordSizeRecursiveExtractor sizeExtractor = new WordSizeRecursiveExtractor(
-                text, 0, text.length());
+                wordSizes, text, 0, text.length());
 
         RecursiveTask.invokeAll(sizeExtractor);
-        return sizeExtractor.join();
+        sizeExtractor.join();
+        return wordSizes;
     }
 
-    private static class WordSizeRecursiveExtractor extends RecursiveTask<Map<Integer, Integer>> {
+    private static class WordSizeRecursiveExtractor extends RecursiveAction {
+
         private static final String WORD_DELIMITER = " ";
+
+        private final Map<Integer, Integer> wordSizes;
 
         private final String subtext;
 
@@ -25,53 +31,51 @@ public class ForkJoinWordSizeExtractor {
 
         private final int endText;
 
-        public WordSizeRecursiveExtractor(String subtext, int beginText, int endText) {
+        public WordSizeRecursiveExtractor(Map<Integer, Integer> wordSizes, String subtext, int beginText, int endText) {
+            this.wordSizes = wordSizes;
             this.subtext = subtext;
             this.beginText = beginText;
             this.endText = endText;
         }
 
         @Override
-        protected Map<Integer, Integer> compute() {
+        protected void compute() {
             final int center = subtext.length() / 2;
             final int indexRight = subtext.indexOf(WORD_DELIMITER, center);
             final int indexLeft = subtext.lastIndexOf(WORD_DELIMITER, center);
 
             if (indexRight != -1 || indexLeft != -1) {
                 if (center - indexLeft > Math.abs(indexRight - center)) {
-                    return this.splitJoin(indexRight);
+                    this.splitJoin(indexRight);
                 } else {
-                    return this.splitJoin(indexLeft);
+                    this.splitJoin(indexLeft);
                 }
             } else {
-                return this.countWord();
+                this.countWord();
             }
         }
 
-        private Map<Integer, Integer> countWord() {
+        private void countWord() {
             final int wordSize = subtext.length();
-            final Map<Integer, Integer> frequencyMap = new HashMap<>();
-            frequencyMap.put(wordSize, 1);
-            return frequencyMap;
+            synchronized (wordSizes) {
+                wordSizes.compute(wordSize, (k, v) -> v == null ? 1 : v + 1);
+            }
         }
 
-        private Map<Integer, Integer> splitJoin(int index) {
+        private void splitJoin(int index) {
             final WordSizeRecursiveExtractor splitLeft = new WordSizeRecursiveExtractor(
+                    wordSizes,
                     subtext.substring(0, index),
                     beginText,
                     beginText + index
             );
             final WordSizeRecursiveExtractor splitRight = new WordSizeRecursiveExtractor(
+                    wordSizes,
                     subtext.substring(index + WORD_DELIMITER.length()),
                     beginText + index + WORD_DELIMITER.length(),
                     endText
             );
             ForkJoinTask.invokeAll(splitLeft, splitRight);
-            final Map<Integer, Integer> frequencyMapLeft = splitLeft.join();
-            final Map<Integer, Integer> frequencyMapRight = splitRight.join();
-
-            frequencyMapRight.forEach((key, value) -> frequencyMapLeft.merge(key, value, Integer::sum));
-            return frequencyMapLeft;
         }
     }
 }
